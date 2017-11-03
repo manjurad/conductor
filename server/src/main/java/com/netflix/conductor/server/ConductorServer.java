@@ -42,11 +42,11 @@ import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.redis.utils.JedisMock;
 import com.netflix.conductor.server.es.EmbeddedElasticSearch;
-//import com.netflix.conductor.server.CustomTokenMapSupplier;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
+import com.netflix.dyno.connectionpool.ConnectionPoolConfiguration;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.AbstractTokenMapSupplier;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
@@ -55,24 +55,6 @@ import com.sun.jersey.api.client.Client;
 
 import redis.clients.jedis.JedisCommands;
 
-/*
-final String json = "[{\"token\":\"4294967295\",\"hostname\":\"gemini0\",\"zone\":\"us-east-1a\"}\"," +
-                     "\"{\"token\":\"4294967295\",\"hostname\":\"gemini1\",\"zone\":\"us-east-1b\"},\"" +
-                     "\"{\"token\":\"4294967295\",\"hostname\":\"gemini2\",\"zone\":\"us-east-1c\"}]\"";
-
-private TokenMapSupplier customTokenMapSupplier = new AbstractTokenMapSupplier() {
-
-     @Override
-     public String getTopologyJsonPayload(Set<Host> hosts) {
-            return json;
-     }
-
-     @Override
-     public String getTopologyJsonPayload(String hostname) {
-            return json;
-     }
-};
-*/
 /**
  * @author Viren
  *
@@ -100,11 +82,13 @@ public class ConductorServer {
 
         @Override
         public String getTopologyJsonPayload(Set<Host> hosts) {
+              logger.info("First method called");
               return json;
         }
 
         @Override
         public String getTopologyJsonPayload(String hostname) {
+             logger.info("Second method called");
              return json;
        }
       };
@@ -164,14 +148,14 @@ public class ConductorServer {
 		case dynomite:
 			
 			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(customTokenMapSupplier).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
-			
+                        cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);			
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
 				.withDynomiteClusterName(dynoClusterName)
 				.withCPConfig(cp)
 				.build();
-			
+                        logger.info("Setting up Connection Pool with Token map " + customTokenMapSupplier);			
 			logger.info("Starting conductor server using dynomite cluster " + dynoClusterName);
 			
 			break;
