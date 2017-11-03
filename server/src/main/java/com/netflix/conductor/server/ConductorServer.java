@@ -42,17 +42,37 @@ import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.redis.utils.JedisMock;
 import com.netflix.conductor.server.es.EmbeddedElasticSearch;
+//import com.netflix.conductor.server.CustomTokenMapSupplier;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
+import com.netflix.dyno.connectionpool.impl.lb.AbstractTokenMapSupplier;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
 
 import redis.clients.jedis.JedisCommands;
 
+/*
+final String json = "[{\"token\":\"4294967295\",\"hostname\":\"gemini0\",\"zone\":\"us-east-1a\"}\"," +
+                     "\"{\"token\":\"4294967295\",\"hostname\":\"gemini1\",\"zone\":\"us-east-1b\"},\"" +
+                     "\"{\"token\":\"4294967295\",\"hostname\":\"gemini2\",\"zone\":\"us-east-1c\"}]\"";
+
+private TokenMapSupplier customTokenMapSupplier = new AbstractTokenMapSupplier() {
+
+     @Override
+     public String getTopologyJsonPayload(Set<Host> hosts) {
+            return json;
+     }
+
+     @Override
+     public String getTopologyJsonPayload(String hostname) {
+            return json;
+     }
+};
+*/
 /**
  * @author Viren
  *
@@ -72,6 +92,23 @@ public class ConductorServer {
 	private ConductorConfig cc;
 	
 	private DB db;
+        final String json = "[{\"token\":\"4294967295\",\"hostname\":\"gemini0\",\"zone\":\"us-east-1a\"}\"," +
+                              "\"{\"token\":\"4294967295\",\"hostname\":\"gemini1\",\"zone\":\"us-east-1b\"},\"" +
+                              "\"{\"token\":\"4294967295\",\"hostname\":\"gemini2\",\"zone\":\"us-east-1c\"}]\"";
+
+        private TokenMapSupplier customTokenMapSupplier = new AbstractTokenMapSupplier() {
+
+        @Override
+        public String getTopologyJsonPayload(Set<Host> hosts) {
+              return json;
+        }
+
+        @Override
+        public String getTopologyJsonPayload(String hostname) {
+             return json;
+       }
+      };
+
 	
 	public ConductorServer(ConductorConfig cc) {
 		this.cc = cc;
@@ -126,20 +163,7 @@ public class ConductorServer {
 		case redis:	
 		case dynomite:
 			
-			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(new TokenMapSupplier() {
-				
-				HostToken token = new HostToken(1L, dynoHosts.get(0));
-				
-				@Override
-				public List<HostToken> getTokens(Set<Host> activeHosts) {
-					return Arrays.asList(token);
-				}
-				
-				@Override
-				public HostToken getTokenForHost(Host host, Set<Host> activeHosts) {
-					return token;
-				}
-			}).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
+			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(customTokenMapSupplier).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 			
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
