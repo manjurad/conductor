@@ -168,6 +168,10 @@ public class ConductorServer {
 			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(getTokenMapSupplier(dynoHosts)).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
 			cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);
+                        cp.setSocketTimeout(50); //Socket timeout is 50ms
+                        cp.setConnectTimeout(1000); //Connection timeout is 1s
+                        cp.setPoolShutdownDelay(1); 
+                        cp.setLocalZoneAffinity(false); 
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
