@@ -3,10 +3,11 @@ dependencies {
 	compile project(':conductor-core')
 	compile 'redis.clients:jedis:2.8.1'
 	compile 'com.google.inject:guice:3.0'
-	compile files('/app/libs/dyno-core-1.5.9.jar')
-	compile files('/app/libs/dyno-jedis-1.5.9.jar')
- 	compile 'com.netflix.dyno-queues:dyno-queues-redis:1.0.8'
-	compile 'org.elasticsearch:elasticsearch:2.+'
+        compile fileTree(dir: '/app/libs', include: ['*.jar'])	
+        compile "org.apache.commons:commons-math:2.2"
+        compile "org.slf4j:slf4j-log4j12:1.7.21"
+        compile "commons-io:commons-io:2.4"
+        compile 'org.elasticsearch:elasticsearch:2.+'
 
 	//In memory redis for unit testing
  	testCompile 'org.rarefiedredis.redis:redis-java:0.0.17'
