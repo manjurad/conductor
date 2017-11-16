@@ -171,7 +171,8 @@ public class ConductorServer {
                         cp.setSocketTimeout(50); //Socket timeout is 50ms
                         cp.setConnectTimeout(1000); //Connection timeout is 1s
                         cp.setPoolShutdownDelay(1); 
-                        cp.setLocalZoneAffinity(false); 
+                        cp.setLocalZoneAffinity(false);
+                        cp.setPingFrequencySeconds(10); 
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
